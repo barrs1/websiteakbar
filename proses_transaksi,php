@@ -1,0 +1,46 @@
+<?php
+session_start();
+include 'db.php';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['kue']) && is_array($_POST['kue'])) {
+        // Ambil data kue yang dipilih dari POST
+        $kue_terpilih = $_POST['kue'];
+
+        // Inisialisasi array untuk menyimpan detail transaksi
+        $transaksi = [];
+
+        foreach ($kue_terpilih as $kue_id) {
+            // Query untuk mendapatkan detail kue berdasarkan ID
+            $sql = "SELECT * FROM kue WHERE id = '$kue_id'";
+            $result = $conn->query($sql);
+
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                // Simpan detail kue ke dalam array transaksi
+                $transaksi[] = [
+                    'nama_kue' => $row['nama_kue'],
+                    'harga' => $row['harga'],
+                    'tanggal' => date('Y-m-d H:i:s') // Tanggal transaksi saat ini
+                ];
+            }
+        }
+
+        // Simpan data transaksi ke dalam session
+        $_SESSION['transaksi'] = $transaksi;
+
+        // Redirect ke halaman cetak transaksi atau halaman lain
+        header("Location: cetak_transaksi.php");
+        exit();
+    } else {
+        // Jika tidak ada kue yang dipilih, kembalikan ke halaman transaksi dengan pesan error
+        $_SESSION['error'] = "Pilih minimal satu kue untuk melakukan transaksi.";
+        header("Location: transaksi.php");
+        exit();
+    }
+} else {
+    // Jika tidak ada request POST, kembalikan ke halaman transaksi
+    header("Location: transaksi.php");
+    exit();
+}
+?>
